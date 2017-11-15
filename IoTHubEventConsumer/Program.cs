@@ -35,9 +35,11 @@ namespace IoTHubEventConsumer
     {
         public async Task CloseAsync(PartitionContext context, CloseReason reason)
         {
-            //Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"Connection closed on partition {context.PartitionId} with reason {reason}.");
-            //Console.ResetColor();
+            Console.ResetColor();
+
+            //create checkpoint
             await context.CheckpointAsync();
         }
 
@@ -48,9 +50,9 @@ namespace IoTHubEventConsumer
 
         public async Task ProcessErrorAsync(PartitionContext context, Exception error)
         {
-            //Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"Exception \"{error.Message}\" occured on partition {context.PartitionId}.");
-            //Console.ResetColor();
+            Console.ResetColor();
         }
 
         public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
@@ -58,6 +60,7 @@ namespace IoTHubEventConsumer
             foreach (EventData message in messages)
             {
                 Console.WriteLine("Event received:");
+
                 //message is disposable
                 using (message)
                 {
@@ -72,9 +75,9 @@ namespace IoTHubEventConsumer
 
                     var jsonBody = System.Text.Encoding.UTF8.GetString(body);
 
-                    //Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine($"Body: {jsonBody}");
-                    //Console.ResetColor();
+                    Console.ResetColor();
                 }
             }
         }

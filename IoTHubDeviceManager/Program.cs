@@ -139,7 +139,9 @@ namespace IoTHubDeviceManager
             //get result
             var response = client.InvokeDeviceMethodAsync(deviceId, methodInvocation).Result;
 
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Method invoked with status {response.Status} and body: {response.GetPayloadAsJson()}");
+            Console.ResetColor();
         }
     }
 }

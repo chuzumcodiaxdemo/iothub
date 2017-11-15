@@ -88,9 +88,9 @@ namespace IoTHubDeviceSimulator
             //send event
             client.SendEventAsync(message).Wait();
 
-            //Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Temperature sent to IoT Hub: {temperature}");
-            //Console.ResetColor();
+            Console.ResetColor();
         }
 
         static async Task ReceiveMessages()
@@ -107,10 +107,11 @@ namespace IoTHubDeviceSimulator
 
                 //get message body
                 var body = message.GetBytes();
+
                 Console.WriteLine();
-                //Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("Received message: {0}", System.Text.Encoding.UTF8.GetString(body));
-                //Console.ResetColor();
+                Console.ResetColor();
 
                 await client.CompleteAsync(message);
             }
