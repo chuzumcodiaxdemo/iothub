@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/IoTHubDeviceManager/bin
+/IoTHubDeviceManager/obj
+/IoTHubDeviceSimulator/bin
+/IoTHubDeviceSimulator/obj
+/IoTHubEventConsumer/bin
+/IoTHubEventConsumer/obj
+/.vs
