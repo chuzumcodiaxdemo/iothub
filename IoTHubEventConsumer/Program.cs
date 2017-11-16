@@ -38,14 +38,13 @@ namespace IoTHubEventConsumer
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"Connection closed on partition {context.PartitionId} with reason {reason}.");
             Console.ResetColor();
-
-            //create checkpoint
-            await context.CheckpointAsync();
         }
 
         public async Task OpenAsync(PartitionContext context)
         {
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Connection opened on partition {context.PartitionId}.");
+            Console.ResetColor();
         }
 
         public async Task ProcessErrorAsync(PartitionContext context, Exception error)
@@ -80,6 +79,9 @@ namespace IoTHubEventConsumer
                     Console.ResetColor();
                 }
             }
+
+            //create checkpoint
+            await context.CheckpointAsync();
         }
     }
 }

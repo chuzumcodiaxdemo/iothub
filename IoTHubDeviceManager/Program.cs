@@ -24,6 +24,8 @@ namespace IoTHubDeviceManager
                 Console.WriteLine("2 - Create device");
                 Console.WriteLine("3 - Send message");
                 Console.WriteLine("4 - Invoke direct method");
+                Console.WriteLine("5 - Read reported property");
+                Console.WriteLine("6 - Set desired property");
                 Console.WriteLine("x - Exit");
                 Console.Write("Option: ");
                 var option = Console.ReadLine();
@@ -44,6 +46,12 @@ namespace IoTHubDeviceManager
                         break;
                     case "4":
                         InvokeMethod();
+                        break;
+                    case "5":
+                        ReadReportedProperties();
+                        break;
+                    case "6":
+                        SetDesiredProperty();
                         break;
                     default:
                         Console.WriteLine("Option not valid!");
@@ -142,6 +150,73 @@ namespace IoTHubDeviceManager
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Method invoked with status {response.Status} and body: {response.GetPayloadAsJson()}");
             Console.ResetColor();
+        }
+
+        static void ReadReportedProperties()
+        {
+            Console.WriteLine();
+            Console.Write("Device Id: ");
+            var deviceId = Console.ReadLine();
+
+            //create query
+            var query = manager.CreateQuery($"SELECT * FROM devices WHERE deviceId = '{deviceId}'");
+
+            //fetch results
+            var results = query.GetNextAsTwinAsync().Result;
+
+            foreach (var result in results)
+            {
+                Console.WriteLine("Config report for: {0}", result.DeviceId);
+
+                //get desired property
+                var desiredProperty = result.Properties.Desired.Contains("runningConfig")
+                    ? result.Properties.Desired["runningConfig"]
+                    : null;
+
+                //get reported property
+                var reportedProperty = result.Properties.Reported.Contains("runningConfig")
+                    ? result.Properties.Reported["runningConfig"]
+                    : null;
+
+                Console.WriteLine("Desired runningConfig: {0}", Newtonsoft.Json.JsonConvert.SerializeObject(desiredProperty));
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Reported runningConfig: {0}", Newtonsoft.Json.JsonConvert.SerializeObject(reportedProperty));
+                Console.ResetColor();
+            }
+        }
+
+        static void SetDesiredProperty()
+        {
+            Console.WriteLine();
+            Console.Write("Device Id: ");
+            var deviceId = Console.ReadLine();
+
+            Console.WriteLine();
+            Console.Write("Running state: ");
+            var state = Console.ReadLine();
+
+            //get device twin
+            var twin = manager.GetTwinAsync(deviceId).Result;
+            var property = new
+            {
+                properties = new
+                {
+                    desired = new
+                    {
+                        runningConfig = new
+                        {
+                            runningState = state
+                        }
+                    }
+                }
+            };
+
+            //serialize property
+            var jsonProperty = Newtonsoft.Json.JsonConvert.SerializeObject(property);
+
+            //update twin desired property
+            manager.UpdateTwinAsync(twin.DeviceId, jsonProperty, twin.ETag);
+            Console.WriteLine("Updated desired property");
         }
     }
 }

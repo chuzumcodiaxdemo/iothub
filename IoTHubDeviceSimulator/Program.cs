@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Shared;
 using System;
 using System.Threading.Tasks;
 
@@ -10,6 +11,7 @@ namespace IoTHubDeviceSimulator
         static DeviceClient client;
         static string deviceId;
         static string deviceKey;
+        static TwinCollection reportedProperties = new TwinCollection();
 
         static void Main(string[] args)
         {
@@ -62,7 +64,12 @@ namespace IoTHubDeviceSimulator
             //start receiving messages
             //ReceiveMessages();
 
+            //set handler for direct method
             //client.SetMethodHandlerAsync("StartWaterPump", StartWaterPump, null).Wait();
+
+            //InitTwinProperties();
+            //set handler for direct method
+            //client.SetDesiredPropertyUpdateCallbackAsync(OnDesiredPropertyChanged, null).Wait();
         }
 
         static void PublishEvent()
@@ -134,6 +141,66 @@ namespace IoTHubDeviceSimulator
 
             //return result
             return Task.FromResult(new MethodResponse(System.Text.Encoding.UTF8.GetBytes(resultJson), 200));
+        }
+
+        static async Task InitTwinProperties()
+        {
+            Console.WriteLine("Report initial running config:");
+
+            //set reported property
+            TwinCollection runningConfig = new TwinCollection
+            {
+                ["configId"] = "1",
+                ["runningState"] = "Stopped"
+            };
+            reportedProperties["runningConfig"] = runningConfig;
+
+            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(reportedProperties));
+
+            //update reported properties
+            await client.UpdateReportedPropertiesAsync(reportedProperties);
+        }
+
+        static async Task OnDesiredPropertyChanged(TwinCollection desiredProperties, object userContext)
+        {
+            Console.WriteLine("Desired property change:");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(desiredProperties));
+            Console.ResetColor();
+
+            var currentPropertyConfig = reportedProperties["runningConfig"];
+            var desiredPropertyConfig = desiredProperties["runningConfig"];
+
+            if (desiredPropertyConfig != null)
+            {
+                Console.WriteLine("Initiating config change");
+                currentPropertyConfig["status"] = "Pending";
+                currentPropertyConfig["pendingConfig"] = desiredPropertyConfig;
+
+                //update reported properties
+                await client.UpdateReportedPropertiesAsync(reportedProperties);
+
+                CompleteConfigChange();
+            }
+        }
+
+        static async void CompleteConfigChange()
+        {
+            var currentRunningConfig = reportedProperties["runningConfig"];
+
+            Console.WriteLine("Simulating running state changed...");
+            await Task.Delay(10 * 1000); //delay 10 seconds
+
+            Console.WriteLine("Completing config change...");
+            
+            currentRunningConfig["runningState"] = currentRunningConfig["pendingConfig"]["runningState"];
+            currentRunningConfig["status"] = "Success";
+            currentRunningConfig["pendingConfig"] = null;
+
+            //update reported properties
+            await client.UpdateReportedPropertiesAsync(reportedProperties);
+
+            Console.WriteLine("Config change complete.");
         }
     }
 }
